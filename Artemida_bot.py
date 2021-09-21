@@ -144,7 +144,7 @@ async def play(ctx, arg):
         print('Уже подключен или не удалось подключиться')
 
     if vc.is_playing():
-        await ctx.send(f'{ctx.message.author.mention}, музыка уже проигрывается.')
+        await ctx.send(f'{ctx.message.author.mention}, музыка уже проигрывается. Если нет, то потворите попытку через минуту.')
 
     else:
         with YoutubeDL(YDL_OPTIONS) as ydl:
@@ -168,7 +168,7 @@ async def playl(ctx):
         for file in files:
             filelist.append(os.path.join(root, file))
 
-    l = list(range(0, len(filelist)-1))
+    l = list(range(0, len(filelist)))
     random.shuffle(l)
 
     try:
@@ -178,10 +178,9 @@ async def playl(ctx):
         print('Уже подключен или не удалось подключиться')
 
     if vc.is_playing():
-        await ctx.send(f'{ctx.message.author.mention}, музыка уже проигрывается.')
-
+        await ctx.send(f'{ctx.message.author.mention}, музыка уже проигрывается. Если нет, то повторите попытку через минуту.')
     else:
-        while 1>0:
+        while True:
             while vc.is_playing():
                 await sleep(1)
             if not vc.is_paused():
