@@ -143,20 +143,13 @@ async def play(ctx, arg):
     except:
         print('Уже подключен или не удалось подключиться')
 
-    if vc.is_playing():
-        await ctx.send(f'{ctx.message.author.mention}, музыка уже проигрывается. Если нет, то потворите попытку через минуту.')
+    while vc.is_playing():
+        await sleep(1)
 
-    else:
-        with YoutubeDL(YDL_OPTIONS) as ydl:
-            info = ydl.extract_info(arg, download=False)
-
-        URL = info['formats'][0]['url']
-        vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source = URL, **FFMPEG_OPTIONS))
-
-        while vc.is_playing():
-            await sleep(1)
-        if not vc.is_paused():
-            await vc.disconnect()
+    with YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(arg, download=False)
+    URL = info['formats'][0]['url']
+    vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=URL, **FFMPEG_OPTIONS))
 
 @bot.command() #локальная музыка с моего компа
 async def playl(ctx):
@@ -192,15 +185,20 @@ async def playl(ctx):
                     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
 
 @bot.command()
-async def skipl(ctx):
-    vc.stop()
-
-@bot.command()
 async def stop(ctx):
     await vc.disconnect()
 
 @bot.command()
+async def skip(ctx):
+    try:
+        await vc.pause()
+        await vc.resume()
+    except:
+        vc.stop()
+
+
+@bot.command()
 async def h(message):
-    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба (очередь в разработке)\n$playl - играет музыку из моего локального плейлиста\n$skipl - следующий локальный трек\nstop - отключает музыку")
+    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\nstop - отключает музыку")
 
 bot.run(settings['token'])
