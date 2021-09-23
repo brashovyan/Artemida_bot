@@ -10,6 +10,7 @@ from asyncio import sleep
 from youtube_dl import YoutubeDL
 
 import os
+from bs4 import BeautifulSoup
 
 #перед запуском не забудь вставить токен
 
@@ -185,6 +186,14 @@ async def playl(ctx):
                     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
 
 @bot.command()
+async def anekdot(ctx):
+    page = requests.get("https://anekdotov.net/anekdot/")
+    page1 = page.content
+    soup = BeautifulSoup(page1, "lxml")
+    soup1 = soup.find_all("div", {"class":"anekdot"})
+    await ctx.send(soup1[random.randint(0, len(soup1)-1)].text)
+
+@bot.command()
 async def stop(ctx):
     await vc.disconnect()
 
@@ -199,6 +208,6 @@ async def skip(ctx):
 
 @bot.command()
 async def h(message):
-    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\nstop - отключает музыку")
+    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n$stop - отключает музыку\n$anekdot - отправляет анекдот")
 
 bot.run(settings['token'])
