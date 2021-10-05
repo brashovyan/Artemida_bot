@@ -11,6 +11,7 @@ from youtube_dl import YoutubeDL
 
 import os
 from bs4 import BeautifulSoup
+from balaboba import balaboba
 
 #перед запуском не забудь вставить токен
 
@@ -187,11 +188,12 @@ async def playl(ctx):
 
 @bot.command()
 async def anekdot(ctx):
-    page = requests.get("https://anekdotov.net/anekdot/")
+    page = requests.get(f"https://vse-shutochki.ru/anekdoty/{random.randint(1, 2059)}")
     page1 = page.content
     soup = BeautifulSoup(page1, "lxml")
-    soup1 = soup.find_all("div", {"class":"anekdot"})
-    await ctx.send(soup1[random.randint(0, len(soup1)-1)].text)
+    soup1 = soup.find_all("div", {"class":"post"})
+    str = soup1[random.randint(0, len(soup1)-1)].text.split("\n")
+    await ctx.send(str[0])
 
 @bot.command()
 async def stop(ctx):
@@ -205,9 +207,15 @@ async def skip(ctx):
     except:
         vc.stop()
 
+@bot.command()
+async def bal(ctx):
+    str = ctx.message.content.split("$bal ")
+    with requests.Session() as session:
+         response = balaboba(str[1], intro=6, session=session)
+    await ctx.send(response)
 
 @bot.command()
 async def h(message):
-    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n$stop - отключает музыку\n$anekdot - отправляет анекдот")
+    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n$stop - отключает музыку\n$anekdot - отправляет анекдот\nbal + сообщение - Балабоба от Яндекса")
 
 bot.run(settings['token'])
