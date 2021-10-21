@@ -14,9 +14,11 @@ from bs4 import BeautifulSoup
 from balaboba import balaboba
 
 #перед запуском не забудь вставить токен
+intents = discord.Intents.default()
+intents.members = True
 
 YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'False'}
-bot = commands.Bot(command_prefix=settings['prefix'])  # Так как мы указали префикс в settings.
+bot = commands.Bot(command_prefix=settings['prefix'], intents = intents, help_command=None)  # Так как мы указали префикс в settings.
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
 @bot.command()
@@ -153,11 +155,11 @@ async def play(ctx, arg):
     URL = info['formats'][0]['url']
     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=URL, **FFMPEG_OPTIONS))
 
-@bot.command() #локальная музыка с моего компа
+@bot.command() #локальная музыка с компа
 async def playl(ctx):
     global vc
     i = 0
-    path = "C:\\Games\\Muzlo"
+    path = "C:\\Games\\Muzlo" #путь до папки с музыкой. умеет скипать то, что не может воспроизвести
     filelist = []
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -192,6 +194,7 @@ async def anekdot(ctx):
     page1 = page.content
     soup = BeautifulSoup(page1, "lxml")
     soup1 = soup.find_all("div", {"class":"post"})
+    print(soup1)
     str = soup1[random.randint(0, len(soup1)-1)].text.split("\n")
     await ctx.send(str[0])
 
@@ -215,7 +218,49 @@ async def bal(ctx):
     await ctx.send(response)
 
 @bot.command()
-async def h(message):
-    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n$stop - отключает музыку\n$anekdot - отправляет анекдот\nbal + сообщение - Балабоба от Яндекса")
+async def film(ctx):
+    page = requests.get(f"https://randomfilm.ru")
+    page1 = page.content
+    soup = BeautifulSoup(page1, "lxml")
+    title1 = soup.find_all("h2")
+    inf = soup.find_all("tr")
+    st = str(inf).split('\n')
+
+    year = st[0]
+    year = year[173:len(year)-5]
+
+    country = st[1]
+    country = country[18:len(country)-5]
+
+    genre = st[2]
+    genre = genre[16:len(genre)-5]
+
+    #print(st[3]) #yt]]недоделал продолжительность, режиссера и актера - они есть не увсех фильмов
+    await ctx.send(f"{str(title1)[5:len(title1)-7]}\n\nГод: {year}\nСтрана: {country}\nЖанр: {genre}")
+
+@bot.command()
+async def who(ctx):
+    try:
+        #users = ctx.guild.members
+        voice_channel = ctx.message.author.voice.channel
+        st = f'Сейчас в вашем голосовом канале "{voice_channel}" находятся:\n'
+        users = voice_channel.members
+        for member in users:
+            if member.nick is None:
+                st += (member.name + "\n")
+            else:
+                st += (member.nick + "\n")
+        await ctx.send(st)
+    except:
+        await ctx.send(f'{ctx.message.author.mention} В данный момент вы не находитесь в голосовом канале. Зайдите в тот канал, из которого вы хотите получить список участников.')
+
+@bot.command()
+async def help(message):
+    await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n"
+                       "$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n"
+                       "$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n"
+                       "$stop - отключает музыку\n$anekdot - отправляет анекдот\n"
+                       "$bal + сообщение - Балабоба от Яндекса\n"
+                       "$film - случайный фильм\n$who - участники голосового канала")
 
 bot.run(settings['token'])
