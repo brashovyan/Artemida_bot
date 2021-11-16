@@ -11,7 +11,8 @@ from youtube_dl import YoutubeDL
 
 import os
 from bs4 import BeautifulSoup
-from balaboba import balaboba
+from aiobalaboba import balaboba
+from aiohttp import ClientSession
 
 #перед запуском не забудь вставить токен
 intents = discord.Intents.default()
@@ -194,12 +195,16 @@ async def anekdot(ctx):
     page1 = page.content
     soup = BeautifulSoup(page1, "lxml")
     soup1 = soup.find_all("div", {"class":"post"})
-    print(soup1)
+    #print(soup1)
     str = soup1[random.randint(0, len(soup1)-1)].text.split("\n")
     await ctx.send(str[0])
 
 @bot.command()
 async def stop(ctx):
+    await vc.disconnect()
+
+@bot.command()
+async def leave(ctx):
     await vc.disconnect()
 
 @bot.command()
@@ -213,8 +218,8 @@ async def skip(ctx):
 @bot.command()
 async def bal(ctx):
     str = ctx.message.content.split("$bal ")
-    with requests.Session() as session:
-         response = balaboba(str[1], intro=6, session=session)
+    async with ClientSession() as session:
+        response = await balaboba(str[1], intro=6, session=session)
     await ctx.send(response)
 
 @bot.command()
@@ -261,6 +266,6 @@ async def help(message):
                        "$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n"
                        "$stop - отключает музыку\n$anekdot - отправляет анекдот\n"
                        "$bal + сообщение - Балабоба от Яндекса\n"
-                       "$film - случайный фильм\n$who - участники голосового канала")
+                       "$film - случайный фильм\n$who - участники голосового канала\n$leave - бот покидает голосовой канал")
 
 bot.run(settings['token'])
