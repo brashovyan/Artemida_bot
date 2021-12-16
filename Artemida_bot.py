@@ -4,6 +4,8 @@ import json
 import requests
 import discord
 import random
+from googletrans import Translator
+
 #from discord.utils import get
 
 from asyncio import sleep
@@ -13,6 +15,8 @@ import os
 from bs4 import BeautifulSoup
 from aiobalaboba import balaboba
 from aiohttp import ClientSession
+
+
 
 #перед запуском не забудь вставить токен
 intents = discord.Intents.default()
@@ -130,12 +134,13 @@ async def roll(message):
     r = random.randint(0, 100)
     await message.send(f"{message.author.mention }: {str(r)}")
 
-@bot.command() #цитата из аниме (пока на английском)
+@bot.command() #цитата из аниме
 async def s(ctx):
     response = requests.get('https://some-random-api.ml/animu/quote')
     json_data = json.loads(response.text)  # Извлекаем JSON
-
-    s = "Цитата: " + json_data['sentence']+"\n" + "\nАниме: " + json_data['anime'] + "\nПерсонаж: " + json_data['characther']
+    translator = Translator()
+    result = translator.translate(json_data['sentence'], src='en', dest='russian')
+    s = "Цитата: " + json_data['sentence']+"\n" + "\nАниме: " + json_data['anime'] + "\nПерсонаж: " + json_data['character'] +'\n' +'\n' +"Перевод: " + result.text
     await ctx.send(s)
 
 @bot.command() #музыка с ютуба. $play ссылка
@@ -146,7 +151,14 @@ async def play(ctx, arg):
         voice_channel = ctx.message.author.voice.channel
         vc = await voice_channel.connect()
     except:
-        print('Уже подключен или не удалось подключиться')
+        try:
+            if vc.is_playing():
+                await ctx.send(f'{ctx.message.author.mention}, Видео добавлено в очередь.')
+            else:
+                await ctx.send(f'{ctx.message.author.mention} В данный момент вы не находитесь в голосовом канале.')
+        except:
+            await ctx.send(f'{ctx.message.author.mention} В данный момент вы не находитесь в голосовом канале.')
+
 
     while vc.is_playing():
         await sleep(1)
@@ -173,11 +185,15 @@ async def playl(ctx):
         voice_channel = ctx.message.author.voice.channel
         vc = await voice_channel.connect()
     except:
-        print('Уже подключен или не удалось подключиться')
+        try:
+            if vc.is_playing():
+                await ctx.send(f'{ctx.message.author.mention}, Вы уже запустили локальную музыку. Если вы хотите переключить музыку, воспользуйтесь командой $skip. Если вы хотите включить видео с Ютуба, сперва используйте команду $stop, потом $play + ссылка. Если музыка не воспроизваодится, повторите попытку через минуту.')
+            else:
+                await ctx.send(f'{ctx.message.author.mention} В данный момент вы не находитесь в голосовом канале.')
+        except:
+            await ctx.send(f'{ctx.message.author.mention} В данный момент вы не находитесь в голосовом канале.')
 
-    if vc.is_playing():
-        await ctx.send(f'{ctx.message.author.mention}, музыка уже проигрывается. Если нет, то повторите попытку через минуту.')
-    else:
+    if vc.is_playing() == False:
         while True:
             while vc.is_playing():
                 await sleep(1)
@@ -185,9 +201,14 @@ async def playl(ctx):
                 if i != (len(filelist)-1):
                     i += 1
                     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
+
                 else:
                     i = 0
                     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
+                n = filelist[l[i]].split('\\')
+                n = n[len(n) - 1]
+                n = n[:-4]
+                await ctx.send(f'Сейчас проигрывается: {n}')
 
 @bot.command()
 async def anekdot(ctx):
@@ -262,7 +283,7 @@ async def who(ctx):
 @bot.command()
 async def help(message):
     await message.send("Мои команды:\n$p - случайная пикча\n$roll - случайное число от 0 до 100\n"
-                       "$s - случаная цитата из аниме (на английском)\n$play + ссылка - играет музыку с ютуба\n"
+                       "$s - случаная цитата из аниме (c машина переводить)\n$play + ссылка - играет музыку с ютуба\n"
                        "$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n"
                        "$stop - отключает музыку\n$anekdot - отправляет анекдот\n"
                        "$bal + сообщение - Балабоба от Яндекса\n"
