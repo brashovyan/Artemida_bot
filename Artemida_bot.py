@@ -40,78 +40,90 @@ async def roll(message):
 
 @bot.command() #музыка с ютуба. $play ссылка
 async def play(ctx, arg):
-    global vc
-
     try:
-        voice_channel = ctx.message.author.voice.channel
-        vc = await voice_channel.connect()
-    except:
-        try:
-            if vc.is_playing():
-                await ctx.send(f'{ctx.message.author.mention}, Видео добавлено в очередь.')
+        if "www.youtube.com" in str(arg):
+            if str(arg).count('=') < 2:
+                global vc
+
+                try:
+                    voice_channel = ctx.message.author.voice.channel
+                    vc = await voice_channel.connect()
+                except:
+                    try:
+                        if vc.is_playing():
+                            await ctx.send(f'{ctx.message.author.mention}, Видео добавлено в очередь.')
+                        else:
+                            await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале. Либо попробуйте через минуту.')
+                    except:
+                        await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале. Либо попробуйте через минуту.')
+
+
+                while vc.is_playing():
+                    await sleep(1)
+
+                with yt_dlp.YoutubeDL(ytdl_options) as ydl:
+                    info = ydl.extract_info(arg, download=False)
+                    URL = info['url']
+                    vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=URL, **FFMPEG_OPTIONS))
+
             else:
-                await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале. Либо попробуйте через минуту.')
-        except:
-            await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале. Либо попробуйте через минуту.')
+                await ctx.send(f'{ctx.message.author.mention}, плейлисты не проигрываются(')
 
-
-    while vc.is_playing():
-        await sleep(1)
-
-    with yt_dlp.YoutubeDL(ytdl_options) as ydl:
-        info = ydl.extract_info(arg, download=False)
-        URL = info['url']
-        vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=URL, **FFMPEG_OPTIONS))
-
-
-@bot.command() #локальная музыка с компа
-async def playl(ctx):
-    global vc
-    i = 0
-    path = "D:\\Muzlo" #путь до папки с музыкой. умеет скипать то, что не может воспроизвести
-    filelist = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            filelist.append(os.path.join(root, file))
-
-    l = list(range(0, len(filelist)))
-    random.shuffle(l)
-
-    try:
-        voice_channel = ctx.message.author.voice.channel
-        vc = await voice_channel.connect()
+        else:
+            await ctx.send(f'{ctx.message.author.mention}, плейлисты не проигрываются(')
+                     
     except:
-        try:
-            if vc.is_playing():
-                await ctx.send(f'{ctx.message.author.mention}, Ошибка! Бот уже что-то проигрывает, скорее всего ютуб. Сначала выключите его, написав $leave или $stop.')
-            else:
-                await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале.')
-        except:
-            await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале.')
+        await ctx.send(f'{ctx.message.author.mention}, плейлисты не проигрываются(')
 
-    if vc.is_playing() == False:
-        while True:
-            while vc.is_playing():
-                await sleep(1)
-            if not vc.is_paused():
-                if i != (len(filelist)-1):
-                    i += 1
-                    vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
 
-                else:
-                    i = 0
-                    vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
-                n = filelist[l[i]].split('\\')
-                n = n[len(n) - 1]
-                n = n[:-4]
-                await ctx.send(f'Сейчас проигрывается: {n}')
+# @bot.command() #локальная музыка с компа
+# async def playl(ctx):
+#     global vc
+#     i = 0
+#     path = "D:\\Muzlo" #путь до папки с музыкой. умеет скипать то, что не может воспроизвести
+#     filelist = []
+#     for root, dirs, files in os.walk(path):
+#         for file in files:
+#             filelist.append(os.path.join(root, file))
+#
+#     l = list(range(0, len(filelist)))
+#     random.shuffle(l)
+#
+#     try:
+#         voice_channel = ctx.message.author.voice.channel
+#         vc = await voice_channel.connect()
+#     except:
+#         try:
+#             if vc.is_playing():
+#                 await ctx.send(f'{ctx.message.author.mention}, Ошибка! Бот уже что-то проигрывает, скорее всего ютуб. Сначала выключите его, написав $leave или $stop.')
+#             else:
+#                 await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале.')
+#         except:
+#             await ctx.send(f'{ctx.message.author.mention} Ошибка! Возможно, вы не находитесь в голосовом канале.')
+#
+#     if vc.is_playing() == False:
+#         while True:
+#             while vc.is_playing():
+#                 await sleep(1)
+#             if not vc.is_paused():
+#                 if i != (len(filelist)-1):
+#                     i += 1
+#                     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
+#
+#                 else:
+#                     i = 0
+#                     vc.play(discord.FFmpegPCMAudio(executable="ffmpeg\\ffmpeg.exe", source=filelist[l[i]]))
+#                 n = filelist[l[i]].split('\\')
+#                 n = n[len(n) - 1]
+#                 n = n[:-4]
+#                 await ctx.send(f'Сейчас проигрывается: {n}')
 
 
 # короче дискорд без танцев с бубном теперь на даёт отправлять запросы в инет(
 # python requests и сайт тут не причем
 # @bot.command()
 # async def anekdot(ctx):
-#     page = requests.get(f"https://vse-shutochki.ru/anekdoty/{random.randint(1, 2059)}")
+#     page = requests.get(f"https://vse-shutochki.ru/anekdoty/{random.randint(1, 2078)}")
 #     page1 = page.content
 #     soup = BeautifulSoup(page1, "lxml")
 #     soup1 = soup.find_all("div", {"class":"post"})
@@ -122,12 +134,16 @@ async def playl(ctx):
 
 @bot.command()
 async def stop(ctx):
+    global vc
     await vc.disconnect()
+    vc = ""
 
 
 @bot.command()
 async def leave(ctx):
+    global vc
     await vc.disconnect()
+    vc = ""
 
 
 @bot.command()
@@ -182,7 +198,7 @@ async def who(ctx):
 async def help(message):
     await message.send("Мои команды:\n$roll - случайное число от 0 до 100"
                        "\n$play + ссылка - играет музыку с ютуба\n"
-                       "$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n"
+                       # "$playl - играет музыку из моего локального плейлиста\n$skip - следующий трек\n"
                        "$stop - отключает музыку (бот ливает)\n"
                        "$who - участники голосового канала\n$leave - бот покидает голосовой канал")
 
